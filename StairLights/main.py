@@ -4,8 +4,9 @@ import ujson as json
 from vl53l1x import VL53L1X
 
 # SYSTEM FUNCTIONS
-def restart(reason):
+def restart(params):
   global client, CLIENT_ID, CLIENT_NAME
+  reason = params['reason']
   print("<< Restarting. [{}] >>".format(reason))
   msg = '{} [{}] restarting. Reason: {}'.format(CLIENT_NAME, CLIENT_ID, reason)
   client.publish(TOPIC_PUB, msg)
@@ -47,6 +48,7 @@ def sub_cb(topic, msg):
   
   elif target == 'lights':
     global lights
+    print("command: {}\nparams: {}\ntype: {}".format(command, params, type(params)))
     lights.execute(command, params)
 
 def check_in(client, client_name, counter, topic_pub):
@@ -60,7 +62,7 @@ def check_in(client, client_name, counter, topic_pub):
 try:
   client = connect_and_subscribe(CLIENT_ID, SERVER, TOPIC_SUB)
 except OSError as e:
-  restart(e)
+  restart(params={'reason' : e})
 
 # INSTANTIATING THE PIXELS
 PIN = 13
@@ -80,11 +82,14 @@ print("<< TOF Base Reading: {} >>".format(base_reading))
 # MAIN LOOP
 while True:
   try:
+    # CHECK MESSAGES
     client.check_msg()
+
+    # PUBLISH MESSAGE IF APPROPRIATE
     if (time() - last_message) > (message_interval * counter):
       counter, last_message = check_in(client, CLIENT_NAME, counter, TOPIC_PUB)
-    sleep(1)
+    
+    distance = tof.read()
+    
   except OSError as e:
-    restart(e)
-
-
+    restart(params={'reason' : e})

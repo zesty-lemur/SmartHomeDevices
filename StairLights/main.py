@@ -1,5 +1,5 @@
 import utime as time
-from pixel import PixelArray, create_frames
+from pixel import Pixel
 import ujson as json
 
 # SYSTEM FUNCTIONS
@@ -22,7 +22,7 @@ TOPIC_SUB = b'house/lights/stairs'
 TOPIC_PUB = b'house/devices'
 
 start_time = time.time()
-message_interval = 10
+message_interval = 30
 counter = 1
 
 def connect_and_subscribe(client_id, server, topic_sub):
@@ -34,7 +34,7 @@ def connect_and_subscribe(client_id, server, topic_sub):
   return client
 
 def sub_cb(topic, msg):
-  print("Raw Msg: {}".format(msg)) # For debugging only
+  print("Raw Msg: {}".format(msg)) #! For debugging only
   msg = json.loads(msg)
   target = msg['target']
   command = msg['command']
@@ -63,12 +63,11 @@ except OSError as e:
 
 # INSTANTIATING THE PIXELS
 PIN = 13
-FRAMES = 4
-PIXELS_PER_FRAME = 30
-total_pixels, frames = create_frames(FRAMES, PIXELS_PER_FRAME)
-array = PixelArray(PIN, total_pixels, frames)
+TOTAL_PIXELS = 120
+STRIPS = 4
+p = Pixel(PIN, TOTAL_PIXELS, STRIPS)
 print("<< Checking light array >>")
-array.flash_all()
+p.check_array()
 print("<< Check complete >>")
 
 # MAIN LOOP

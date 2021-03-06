@@ -1,6 +1,7 @@
-import utime as time
+from utime import time, sleep
 from pixel import Pixel
 import ujson as json
+from vl53l1x import VL53L1X
 
 # SYSTEM FUNCTIONS
 def restart(reason):
@@ -8,7 +9,7 @@ def restart(reason):
   print("<< Restarting. [{}] >>".format(reason))
   msg = '{} [{}] restarting. Reason: {}'.format(CLIENT_NAME, CLIENT_ID, reason)
   client.publish(TOPIC_PUB, msg)
-  time.sleep(2)
+  sleep(2)
   machine.reset()
   
 sys_funcs = {
@@ -18,11 +19,11 @@ sys_funcs = {
 # MQTT CONNECTION, CONSTANTS & VARIABLES
 CLIENT_ID = ubinascii.hexlify(machine.unique_id())
 CLIENT_NAME = 'StairsESP8266'
-TOPIC_SUB = b'house/lights/stairs'
-TOPIC_PUB = b'house/devices'
+TOPIC_SUB = 'house/lights/stairs'
+TOPIC_PUB = 'house/devices'
 
-start_time = time.time()
-message_interval = 30
+last_message = time()
+message_interval = 10
 counter = 1
 
 def connect_and_subscribe(client_id, server, topic_sub):
@@ -44,17 +45,17 @@ def sub_cb(topic, msg):
     global sys_funcs
     sys_funcs[command](params)
   
-  elif target == 'array':
-    global array
-    array.execute(command, params)
+  elif target == 'lights':
+    global lights
+    lights.execute(command, params)
 
-def check_in(client, client_id, counter, topic_pub):
-  msg = b'esp8266 [{}] online. Count [{}]'.format(client_id, counter)
+def check_in(client, client_name, counter, topic_pub):
+  msg = '{} [{}] online. Count [{}]'.format(client_name, client.client_id, counter)
   client.publish(topic_pub, msg)
   print("<< Checked in >>")
-  last_message = time.time()
+  last_message = time()
   counter += 1
-  return counter
+  return counter, last_message
 
 try:
   client = connect_and_subscribe(CLIENT_ID, SERVER, TOPIC_SUB)
@@ -65,19 +66,24 @@ except OSError as e:
 PIN = 13
 TOTAL_PIXELS = 120
 STRIPS = 4
-p = Pixel(PIN, TOTAL_PIXELS, STRIPS)
+lights = Pixel(PIN, TOTAL_PIXELS, STRIPS)
+# CHECKING THE LIGHT ARRAY
 print("<< Checking light array >>")
-p.check_array()
+lights.check_array()
 print("<< Check complete >>")
+
+# INSTANTIATING THE TOF SENSOR
+tof = VL53L1X()
+base_reading = tof.read()
+print("<< TOF Base Reading: {} >>".format(base_reading))
 
 # MAIN LOOP
 while True:
   try:
     client.check_msg()
-    if (time.time() - start_time) > (message_interval * counter):
-      rtn = check_in(client, CLIENT_ID, counter, TOPIC_PUB)
-      if rtn != None:
-        counter = rtn
+    if (time() - last_message) > (message_interval * counter):
+      counter, last_message = check_in(client, CLIENT_NAME, counter, TOPIC_PUB)
+    sleep(1)
   except OSError as e:
     restart(e)
 

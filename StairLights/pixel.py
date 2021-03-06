@@ -36,6 +36,43 @@ class PixelArray:
     self.array.fill((0, 0, 0))
     self.array.write()
 
+  def on(self, pixels='all', colour=100100100):
+    print("<< Command called. Params: {} / {} >>".format(pixels, colour))
+    if pixels == 'all':
+      pixels = []
+      print(pixels)
+      for i in range(self.tp):
+        pixels.append(i)
+    if type(pixels) == list:
+      for pixel in pixels:
+        print(self.array, pixel)
+        self.array[int(pixel)] = colour
+        self.array.write()
+    else:
+      self.array[pixels] = colour
+      self.array.write()    
+
+  def execute(self, command, params):
+    class_funcs = {
+    'random' : self.random,
+    'flash_all' : self.flash_all,
+    'on' : self.on,
+    }
+    class_funcs[command](params)
+  
+  @staticmethod
+  def rgb_parse(rgb_string):
+    """
+    Parses a 9-character string of rgb values to a tuple of 3x 3-digits
+    """
+    rgb_string = rgb_string.strip('rgb=')
+    r = int(rgb_string[:3])
+    g = int(rgb_string[3:6])
+    b = int(rgb_string[6:9])
+    rgb = (r,g,b)
+    return rgb
+
+# FANCY FUNCTIONS BELOW - REMOTELY EXECUTED
   def random(self, cycles=1):
     for x in range(cycles):
       for i in range(self.tp):
@@ -45,7 +82,7 @@ class PixelArray:
         self.array[i] = (r, g, b)
         self.array.write()
       sleep(0.5)
-    self.clear()
+      self.clear()
   
   def flash_all(self, rgb=(0,100,0)):
     if type(rgb) == str:
@@ -58,35 +95,13 @@ class PixelArray:
       sleep(0.25)
 
   def scroll(self):
-    self.array[0] = (255,0,0)
-    sleep(1)
-    self.array[0] = (0,0,0)
-    '''
     for frame in self.frames.keys():
       for pixel in self.frames[frame]:
         r = randint(0,255)
         g = randint(0,255)
         b = randint(0,255)
         self.array[pixel] = (r,g,b)
-        sleep(0.5)
+        self.array.write()
+        sleep(0.1)
         self.array[pixel] = (0,0,0)
-    '''
-
-  def execute(self, command, params):
-    class_funcs = {
-    'random' : self.random,
-    'flash_all' : self.flash_all,
-    }
-    class_funcs[command](params)
-  
-  @staticmethod
-  def rgb_parse(rgb_string):
-    """
-    Parses a 9-character string of rgb values to a tuple of 3x 3-digits
-    """
-    rgb_string = rgb_string.strip('rgb=')
-    r = int(rgb_string[:3])
-    g = int(rgb_string[3:6])
-    b = int(rgb_string[6:8])
-    rgb = (r,g,b)
-    return rgb
+        self.array.write()

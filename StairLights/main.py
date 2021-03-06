@@ -68,7 +68,8 @@ PIXELS_PER_FRAME = 30
 total_pixels, frames = create_frames(FRAMES, PIXELS_PER_FRAME)
 array = PixelArray(PIN, total_pixels, frames)
 print("<< Checking light array >>")
-array.scroll()
+array.flash_all()
+print("<< Check complete >>")
 
 # MAIN LOOP
 while True:

@@ -74,9 +74,18 @@ print("<< Checking light array >>")
 lights.check_array()
 print("<< Check complete >>")
 
+# TOF FUNCTIONS
+def tof_average(tof, samples=32):
+  l = []
+  [l.append(tof.read()) for i in range(samples)]
+  avg = sum(l) / len(l)
+  lo_error = avg - 20
+  hi_error = avg + 20
+  return lo_error, avg, hi_error
+
 # INSTANTIATING THE TOF SENSOR
 tof = VL53L1X()
-base_reading = tof.read()
+base_reading = tof_average(tof)
 print("<< TOF Base Reading: {} >>".format(base_reading))
 
 # MAIN LOOP
@@ -89,7 +98,9 @@ while True:
     if (time() - last_message) > (message_interval * counter):
       counter, last_message = check_in(client, CLIENT_NAME, counter, TOPIC_PUB)
     
-    distance = tof.read()
+    lo_error, distance, hi_error = tof_average(tof)
+    #[ ]: Compare this to the distance of the lights
+    # print("<< Lo: {} < Dist: {} < Hi: {} >>".format(lo_error, distance, hi_error))
     
   except OSError as e:
     restart(params={'reason' : e})

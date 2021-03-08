@@ -95,7 +95,7 @@ VL51L1X_DEFAULT_CONFIGURATION = bytes([
 0x40  # 0x87 : start ranging, use StartRanging() or StopRanging(), If you want an automatic start after VL53L1X_init() call, put 0x40 in location 0x87 */
 ])
 class VL53L1X:
-    def __init__(self,i2c=(machine.I2C(-1, machine.Pin(5), machine.Pin(4))), address=0x29): #(self,i2c, address=0x29)
+    def __init__(self, i2c=(machine.I2C(-1, machine.Pin(5), machine.Pin(4))), address=0x29): #(self,i2c, address=0x29)
         self.i2c = i2c
         self.address = address
         self.reset()

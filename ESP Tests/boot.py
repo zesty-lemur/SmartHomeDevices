@@ -30,9 +30,11 @@ def update():
         working_dir="ESP Tests",
         files=["boot.py","main.py"]
     )
+    print("Checking for updates...")
     if OTA.update():
         print("Updated to the latest version! Rebooting...")
         machine.reset()
+    print("No updates found. Finishing boot...")
 
 connect_wifi(SSID, PASS)
 update()

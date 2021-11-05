@@ -1,10 +1,6 @@
 from utime import sleep
-import network
-import esp
-esp.osdebug(None)
 import gc
-gc.collect()
-
+gc.enable()
 
 # WIFI CONNECTION
 SSID = "Number_41"
@@ -24,13 +20,19 @@ def connect_wifi(SSID, PASS):
       else:
         sleep(5)
     print('<< Connected. IP: {} >>'.format(wlan.ifconfig()[0]))
-    
-connect_wifi(SSID, PASS)
 
-@staticmethod
-def _otaUpdate():
-    ulogging.info('Checking for Updates...')
-    from .ota_updater import OTAUpdater
-    otaUpdater = OTAUpdater('https://github.com/Jack-Baird/SmartHomeDevices/tree/main/ESP%20Tests/workSpace', github_src_dir='src', main_dir='app', secrets_file="secrets.py")
-    otaUpdater.install_update_if_available()
-    del(otaUpdater)
+def update():
+    import senko, machine
+    OTA = senko.Senko(
+        user="jack-baird",
+        repo="SmartHomeDevices",
+        branch="master",
+        working_dir="ESP Tests",
+        files=["boot.py","main.py"]
+    )
+    if OTA.update():
+        print("Updated to the latest version! Rebooting...")
+        machine.reset()
+
+connect_wifi(SSID, PASS)
+update()
